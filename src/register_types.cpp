@@ -9,6 +9,11 @@
 
 using namespace godot;
 
+// Set by CMake (derived from LIBNAME) so it always matches the generated .gdextension.
+#ifndef GDEXT_ENTRY_SYMBOL
+#define GDEXT_ENTRY_SYMBOL example_library_init
+#endif
+
 void initialize_gdextension_types(ModuleInitializationLevel p_level)
 {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -26,7 +31,7 @@ void uninitialize_gdextension_types(ModuleInitializationLevel p_level) {
 extern "C"
 {
 	// Initialization
-	GDExtensionBool GDE_EXPORT example_library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization)
+	GDExtensionBool GDE_EXPORT GDEXT_ENTRY_SYMBOL(GDExtensionInterfaceGetProcAddress p_get_proc_address, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization)
 	{
 		GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
 		init_obj.register_initializer(initialize_gdextension_types);

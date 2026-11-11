@@ -1,56 +1,55 @@
-# godot-cpp template
-This repository serves as a quickstart template for GDExtension development with Godot 4.0+.
+# godot-cpp template (CMake)
+
+Quickstart template for GDExtension development with Godot 4.3+, built with CMake.
 
 ## Contents
-* Preconfigured source files for C++ development of the GDExtension ([src/](./src/))
-* An empty Godot project in [project/](./project), to test the GDExtension
+* C++ sources for the extension ([src/](./src/))
+* An empty Godot project in [project/](./project) to test the extension
 * godot-cpp as a submodule (`godot-cpp/`)
-* GitHub Issues template ([.github/ISSUE_TEMPLATE.yml](./.github/ISSUE_TEMPLATE.yml))
-* GitHub CI/CD workflows to publish your library packages when creating a release ([.github/workflows/builds.yml](./.github/workflows/builds.yml))
-* An SConstruct file with various functions, such as boilerplate for [Adding documentation](https://docs.godotengine.org/en/stable/tutorials/scripting/cpp/gdextension_docs_system.html)
+* Class reference XML in [doc_classes/](./doc_classes) (built into debug/editor builds)
+* `CMakePresets.json` with parallel debug / release / editor presets
 
-## Usage - Template
-
-To use this template, log in to GitHub and click the green "Use this template" button at the top of the repository page. This will let you create a copy of this repository with a clean git history.
-
-To get started with your new GDExtension, do the following:
-
-* clone your repository to your local computer
-* initialize the godot-cpp git submodule via `git submodule update --init`
-* change the name of the compiled library file inside the [SConstruct](./SConstruct) file by modifying the `libname` string.
-  * change the paths of the to be loaded library name inside the [project/bin/example.gdextension](./project/bin/example.gdextension) file, by replacing `EXTENSION-NAME` with the name you chose for `libname`.
-* change the `entry_symbol` string inside [project/bin/example.gdextension](./project/bin/example.gdextension) file.
-  * rename the `example_library_init` function in [src/register_types.cpp](./src/register_types.cpp) to the same name you chose for `entry_symbol`.
-* change the name of the `project/bin/example.gdextension` file
-
-Now, you can build the project with the following command:
-
-```shell
-scons
+## Setup
+```sh
+git submodule update --init --recursive
 ```
 
-If the build command worked, you can test it with the [project](./project) project. Import it into Godot, open it, and launch the main scene. You should see it print the following line in the console:
+Then name the extension. There is a single place to do it: `LIBNAME` in [CMakeLists.txt](./CMakeLists.txt)
+(or `-DLIBNAME=my_extension` when configuring). It drives:
+* the library file name
+* the generated `project/bin/<LIBNAME>.gdextension`, created from [build_schemas/extension.gdextension.in](./build_schemas/extension.gdextension.in)
+* the entry symbol (`<LIBNAME>_library_init`, with `-` etc. converted to `_`), passed to [src/register_types.cpp](./src/register_types.cpp) as `GDEXT_ENTRY_SYMBOL`
+* `compatibility_minimum` in the `.gdextension`, taken from `GODOT_API_VERSION`
 
+Edit the schema, not the generated file. The generated `.gdextension` is git-ignored; the Godot-created
+`<LIBNAME>.gdextension.uid` next to it should be committed. If you rename the extension, delete the old generated files.
+
+## Build
+```sh
+cmake -B build -DEXT_CXX_STANDARD=23 -DGODOTCPP_TARGET=template_debug
+cmake --build build -j
 ```
-Type: 24
+Or with presets (these already use all cores):
+```sh
+cmake --preset debug
+cmake --build --preset debug
 ```
+`-j` alone uses all cores, `-j 8` uses eight. Ninja (`-G Ninja`) is parallel by default.
 
-### Configuring an IDE
-You can develop your own extension with any text editor and by invoking scons on the command line, but if you want to work with an IDE (Integrated Development Environment), you can use a compilation database file called `compile_commands.json`. Most IDEs should automatically identify this file, and self-configure appropriately.
-To generate the database file, you can run one of the following commands in the project root directory:
-```shell
-# Generate compile_commands.json while compiling
-scons compiledb=yes
+The library is written straight into `project/bin/<platform>/`. Open [project/](./project) in Godot and run the main scene; it should print `Type: 24`.
 
-# Generate compile_commands.json without compiling
-scons compiledb=yes compile_commands.json
-```
+## Options
+| Option | Default | Notes |
+|---|---|---|
+| `EXT_CXX_STANDARD` | 23 | 17 / 20 / 23 / 26 (minimum 17; 26 needs CMake 3.25+ and a new enough compiler, e.g. GCC 14+) |
+| `GODOT_API_VERSION` | 4.3 | Godot API the bindings are generated from (4.3 - 4.7). Keep `compatibility_minimum` in the .gdextension in step |
+| `GODOTCPP_TARGET` | template_debug | template_debug / template_release / editor |
+| `LIBNAME` | example | Extension name: library, .gdextension and entry symbol all follow it |
+| `EXT_ENTRY_SYMBOL` | (derived) | Override the entry symbol if you need a specific one |
+| `GODOT_PROJECT_DIR` | project | Godot project folder |
+| `GODOTCPP_BUILD_PROFILE` | unset | e.g. `build_profile.json`, to build only the classes you use |
 
-## Usage - Actions
+Other `GODOTCPP_*` options (precision, exceptions, ...) belong to godot-cpp; pass them with `-D`.
 
-This repository comes with continuous integration (CI) through a GitHub action that tests building the GDExtension.
-It triggers automatically for each pushed change. You can find and edit it in [builds.yml](.github/workflows/ci.yml).
-
-There is also a workflow ([make_build.yml](.github/workflows/make_build.yml)) that builds the GDExtension for all supported platforms that you can use to create releases.
-You can trigger this workflow manually from the `Actions` tab on GitHub.
-After it is complete, you can find the file `godot-cpp-template.zip` in the `Artifacts` section of the workflow run.
+## IDEs
+CMake can export `compile_commands.json`: add `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` when configuring.

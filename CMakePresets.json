@@ -1,0 +1,32 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": { "EXT_CXX_STANDARD": "23" }
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "GODOTCPP_TARGET": "template_debug" }
+    },
+    {
+      "name": "release",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "GODOTCPP_TARGET": "template_release" }
+    },
+    {
+      "name": "editor",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "GODOTCPP_TARGET": "editor" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug", "jobs": 0 },
+    { "name": "release", "configurePreset": "release", "jobs": 0 },
+    { "name": "editor", "configurePreset": "editor", "jobs": 0 }
+  ]
+}
